@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/nats-io/nats.go"
 	"github.com/rfashwall/task-service/internal/models"
 	"github.com/rfashwall/task-service/internal/repository/command"
 	"go.uber.org/zap"
@@ -10,12 +13,14 @@ import (
 type TaskCommandHandler struct {
 	TaskCommand command.TaskCommand
 	logger      *zap.Logger
+	nc          *nats.Conn
 }
 
-func NewTaskCommandHandler(taskCommand command.TaskCommand, logger *zap.Logger) *TaskCommandHandler {
+func NewTaskCommandHandler(taskCommand command.TaskCommand, nc *nats.Conn, logger *zap.Logger) *TaskCommandHandler {
 	return &TaskCommandHandler{
 		TaskCommand: taskCommand,
 		logger:      logger,
+		nc:          nc,
 	}
 }
 
@@ -35,6 +40,17 @@ func (h *TaskCommandHandler) createTask(c *fiber.Ctx) error {
 
 	err := h.TaskCommand.CreateTask(c.UserContext(), task)
 	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	eventData := map[string]interface{}{
+		"user_id": task.UserID,
+		"action":  "task_created",
+	}
+	eventBytes, _ := json.Marshal(eventData)
+	err = h.nc.Publish("task.events", eventBytes)
+	if err != nil {
+		h.logger.Error("Failed to publish task created event", zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
@@ -75,12 +91,6 @@ func (h *TaskCommandHandler) deleteTask(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-type User struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
 func (h *TaskCommandHandler) assignTask(c *fiber.Ctx) error {
 	taskID, err := c.ParamsInt("id")
 	if err != nil {
@@ -99,6 +109,17 @@ func (h *TaskCommandHandler) assignTask(c *fiber.Ctx) error {
 
 	err = h.TaskCommand.AssignTask(c.Context(), taskID, req.AssigneeID)
 	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	eventData := map[string]interface{}{
+		"user_id": req.AssigneeID,
+		"action":  "task_assigned",
+	}
+	eventBytes, _ := json.Marshal(eventData)
+	err = h.nc.Publish("task.events", eventBytes)
+	if err != nil {
+		h.logger.Error("Failed to publish task assigned event", zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 

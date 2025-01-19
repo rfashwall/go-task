@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/nats-io/nats.go"
 	"github.com/rfashwall/user-service/internal/models"
 	"github.com/rfashwall/user-service/internal/repository/command"
 	"go.uber.org/zap"
@@ -10,12 +13,14 @@ import (
 type UserCommandHandler struct {
 	UserCommand command.UserCommand
 	logger      *zap.Logger
+	nc          *nats.Conn
 }
 
-func NewUserCommandHandler(userCommand command.UserCommand, logger *zap.Logger) *UserCommandHandler {
+func NewUserCommandHandler(userCommand command.UserCommand, nc *nats.Conn, logger *zap.Logger) *UserCommandHandler {
 	return &UserCommandHandler{
 		UserCommand: userCommand,
 		logger:      logger,
+		nc:          nc,
 	}
 }
 
@@ -32,9 +37,20 @@ func (h *UserCommandHandler) createUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("Invalid input")
 	}
 
-	err := h.UserCommand.CreateUser(c.Context(), user)
+	id, err := h.UserCommand.CreateUser(c.Context(), user)
 	if err != nil {
 		h.logger.Error("Failed to create user", zap.Error(err))
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	eventData := map[string]interface{}{
+		"user_id": id,
+		"action":  "user_created",
+	}
+	eventBytes, _ := json.Marshal(eventData)
+	err = h.nc.Publish("user.events", eventBytes)
+	if err != nil {
+		h.logger.Error("Failed to publish user created event", zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 

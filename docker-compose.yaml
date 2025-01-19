@@ -32,6 +32,8 @@
       - USER_SERVICE_DB_NAME=user_tracker
       - USER_SERVICE_SERVICE_NAME=user-command-service
       - USER_SERVICE_SERVICE_PORT=3001
+      - USER_SERVICE_NATS_PORT=4222
+      - USER_SERVICE_NATS_SERVICE=nats
     ports:
       - "3001:3001"
     depends_on:
@@ -72,6 +74,8 @@
       - TASK_SERVICE_DB_NAME=task_tracker
       - TASK_SERVICE_SERVICE_NAME=task-command-service
       - TASK_SERVICE_SERVICE_PORT=3002
+      - TASK_SERVICE_NATS_PORT=4222
+      - TASK_SERVICE_NATS_SERVICE=nats
     depends_on:
       mysql-server:
         condition: service_healthy
@@ -105,6 +109,18 @@
     environment:
       - NOTIFICATION_SERVICE_SERVICE_NAME=notification-service
       - NOTIFICATION_SERVICE_SERVICE_PORT=3004
+      - NOTIFICATION_SERVICE_NATS_PORT=4222
+      - NOTIFICATION_SERVICE_NATS_SERVICE=nats
+    depends_on:
+      - nats
+
+  nats:
+    image: nats:latest
+    container_name: nats
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
 
  volumes:
    mysql-data:

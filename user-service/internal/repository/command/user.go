@@ -9,7 +9,7 @@ import (
 )
 
 type UserCommand interface {
-	CreateUser(ctx context.Context, user *models.User) error
+	CreateUser(ctx context.Context, user *models.User) (int64, error)
 	UpdateUser(ctx context.Context, user *models.User) error
 	DeleteUser(ctx context.Context, id int) error
 }
@@ -22,9 +22,12 @@ func NewMySQLUserCommand(conn *sql.DB) *MySQLUserCommand {
 	return &MySQLUserCommand{Conn: conn}
 }
 
-func (c *MySQLUserCommand) CreateUser(ctx context.Context, user *models.User) error {
-	_, err := c.Conn.ExecContext(ctx, "INSERT INTO users (name, email, password) VALUES (?, ?, ?)", user.Name, user.Email, user.Password)
-	return err
+func (c *MySQLUserCommand) CreateUser(ctx context.Context, user *models.User) (int64, error) {
+	res, err := c.Conn.ExecContext(ctx, "INSERT INTO users (name, email, password) VALUES (?, ?, ?)", user.Name, user.Email, user.Password)
+	if err != nil {
+		return -1, err
+	}
+	return res.LastInsertId()
 }
 
 func (c *MySQLUserCommand) UpdateUser(ctx context.Context, user *models.User) error {
