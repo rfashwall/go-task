@@ -10,16 +10,21 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/rfashwall/user-service/internal/handlers"
 	"github.com/rfashwall/user-service/internal/repository"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
 func main() {
 	// Database Configuration
-	dbHost := "localhost"
-	dbPort := "3306"
-	dbUser := "root"
-	dbPass := "root"
-	dbName := "user_tracker"
+	viper.SetEnvPrefix("USER_SERVICE") // Set environment variable prefix
+	viper.AutomaticEnv()               // Enable Viper to read from environment variables.
+
+	// Database Configuration from Environment Variables
+	dbHost := viper.GetString("DB_HOST")
+	dbPort := viper.GetString("DB_PORT")
+	dbUser := viper.GetString("DB_USER")
+	dbPass := viper.GetString("DB_PASS")
+	dbName := viper.GetString("DB_NAME")
 
 	// Construct the connection string
 	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPass, dbHost, dbPort, dbName)
@@ -38,7 +43,7 @@ func main() {
 	}
 
 	// Initialize Logger
-	zapLogger, _ := zap.NewProduction()
+	zapLogger, _ := zap.NewDevelopment()
 	defer zapLogger.Sync() // flushes buffer, if any
 
 	// Initialize Repository
