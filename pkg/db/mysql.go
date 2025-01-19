@@ -9,11 +9,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-func MySqlConnect() *sql.DB {
+func MySqlConnect(envPrefix string) *sql.DB {
 
 	// Database Configuration
-	viper.SetEnvPrefix("USER_SERVICE") // Set environment variable prefix
-	viper.AutomaticEnv()               // Enable Viper to read from environment variables.
+	viper.SetEnvPrefix(envPrefix) // Set environment variable prefix
+	viper.AutomaticEnv()          // Enable Viper to read from environment variables.
 
 	// Database Configuration from Environment Variables
 	dbHost := viper.GetString("DB_HOST")
