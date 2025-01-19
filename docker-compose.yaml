@@ -1,58 +1,110 @@
  version: '3.8'
 
  services:
-   mysql-server:
-       image: mysql:latest
-       container_name: mysql-server
-       environment:
-         MYSQL_ROOT_PASSWORD: root
-         MYSQL_DATABASE: user_tracker
-       ports:
-         - "3306:3306"
-       volumes:
-         - mysql-data:/var/lib/mysql
-         - ./init.sh:/docker-entrypoint-initdb.d/init.sh
-       healthcheck:
-         test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
-         interval: 10s
-         retries: 5
-         start_period: 30s
-         timeout: 10s
+  mysql-server:
+      image: mysql:latest
+      container_name: mysql-server
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: user_tracker
+      ports:
+        - "3306:3306"
+      volumes:
+        - mysql-data:/var/lib/mysql
+        - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+      healthcheck:
+        test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
+        interval: 10s
+        retries: 5
+        start_period: 30s
+        timeout: 10s
 
-   user-command-service:
-     build:
-       context: ./user-service
-       dockerfile: Dockerfile.command
-     container_name: user-command-service
-     environment:
-       - USER_SERVICE_DB_HOST=mysql-server 
-       - USER_SERVICE_DB_PORT=3306
-       - USER_SERVICE_DB_USER=root
-       - USER_SERVICE_DB_PASS=root
-       - USER_SERVICE_DB_NAME=user_tracker
-     ports:
-       - "3001:3001"
-     depends_on:
-       mysql-server:
-         condition: service_healthy
+  user-command-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile.command
+    container_name: user-command-service
+    environment:
+      - USER_SERVICE_DB_HOST=mysql-server 
+      - USER_SERVICE_DB_PORT=3306
+      - USER_SERVICE_DB_USER=root
+      - USER_SERVICE_DB_PASS=root
+      - USER_SERVICE_DB_NAME=user_tracker
+      - USER_SERVICE_SERVICE_NAME=user-command-service
+      - USER_SERVICE_SERVICE_PORT=3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      mysql-server:
+        condition: service_healthy
 
-   user-query-service:
-     build:
-       context: ./user-service
-       dockerfile: Dockerfile.query
-     container_name: user-query-service
-     ports:
-       - "3000:3000"
-     environment:
-       - USER_SERVICE_DB_HOST=mysql-server 
-       - USER_SERVICE_DB_PORT=3306
-       - USER_SERVICE_DB_USER=root
-       - USER_SERVICE_DB_PASS=root
-       - USER_SERVICE_DB_NAME=user_tracker
-     depends_on:
-       mysql-server:
-         condition: service_healthy
+  user-query-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile.query
+    container_name: user-query-service
+    ports:
+      - "3000:3000"
+    environment:
+      - USER_SERVICE_DB_HOST=mysql-server 
+      - USER_SERVICE_DB_PORT=3306
+      - USER_SERVICE_DB_USER=root
+      - USER_SERVICE_DB_PASS=root
+      - USER_SERVICE_DB_NAME=user_tracker
+      - USER_SERVICE_SERVICE_NAME=user-query-service
+      - USER_SERVICE_SERVICE_PORT=3000
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+
+  task-command-service:
+    build:
+      context: ./task-service
+      dockerfile: Dockerfile.command
+    container_name: task-command-service
+    ports:
+      - "3002:3002"
+    environment:
+      - TASK_SERVICE_DB_HOST=mysql-server 
+      - TASK_SERVICE_DB_PORT=3306
+      - TASK_SERVICE_DB_USER=root
+      - TASK_SERVICE_DB_PASS=root
+      - TASK_SERVICE_DB_NAME=task_tracker
+      - TASK_SERVICE_SERVICE_NAME=task-command-service
+      - TASK_SERVICE_SERVICE_PORT=3002
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+
+  task-query-service:
+    build:
+      context: ./task-service
+      dockerfile: Dockerfile.query
+    container_name: task-query-service
+    ports:
+      - "3003:3003"
+    environment:
+      - TASK_SERVICE_DB_HOST=mysql-server 
+      - TASK_SERVICE_DB_PORT=3306
+      - TASK_SERVICE_DB_USER=root
+      - TASK_SERVICE_DB_PASS=root
+      - TASK_SERVICE_DB_NAME=task_tracker
+      - TASK_SERVICE_SERVICE_NAME=task-query-service
+      - TASK_SERVICE_SERVICE_PORT=3003
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NOTIFICATION_SERVICE_SERVICE_NAME=notification-service
+      - NOTIFICATION_SERVICE_SERVICE_PORT=3004
 
  volumes:
    mysql-data:
-

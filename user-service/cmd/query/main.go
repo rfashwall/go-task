@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,7 +11,8 @@ import (
 	"github.com/rfashwall/go-task/pkg/middleware"
 	"github.com/rfashwall/go-task/pkg/utils"
 	"github.com/rfashwall/user-service/internal/handlers"
-	"github.com/rfashwall/user-service/internal/query"
+	"github.com/rfashwall/user-service/internal/repository/query"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -18,10 +20,18 @@ func main() {
 	shutdown := utils.InitTracer()
 	defer shutdown()
 
+	envPrefix := "USER_SERVICE"
+
+	viper.SetEnvPrefix(envPrefix)
+	viper.AutomaticEnv()
+
+	serviceName := viper.GetString("SERVICE_NAME")
+	servicePort := viper.GetString("SERVICE_PORT")
+
 	app := fiber.New()
 	app.Use(logger.New())
 	app.Use(healthcheck.New())
-	app.Use(middleware.TracingMiddleware("user-query-service"))
+	app.Use(middleware.TracingMiddleware(serviceName))
 
 	logger, err := zap.NewDevelopment()
 	if err != nil {
@@ -31,7 +41,7 @@ func main() {
 
 	// Connect to the database
 	logger.Info("Connecting to MySQL")
-	conn := db.MySqlConnect()
+	conn := db.MySqlConnect(envPrefix)
 	defer conn.Close()
 
 	// Initialize the repository
@@ -45,6 +55,6 @@ func main() {
 	logger.Info("Setting up routes")
 	userHandler.SetupRoutes(app)
 
-	logger.Info("Listening on port 3000")
-	log.Fatal(app.Listen(":3000"))
+	logger.Info(fmt.Sprintf("Listening on port %s", servicePort))
+	log.Fatal(app.Listen(fmt.Sprintf(":%s", servicePort)))
 }

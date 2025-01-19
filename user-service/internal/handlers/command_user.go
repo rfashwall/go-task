@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/rfashwall/user-service/internal/command"
 	"github.com/rfashwall/user-service/internal/models"
+	"github.com/rfashwall/user-service/internal/repository/command"
 	"go.uber.org/zap"
 )
 
