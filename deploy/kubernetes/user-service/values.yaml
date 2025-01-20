@@ -1,0 +1,23 @@
+service:
+  name: user-service 
+  commandPort: "3001"
+  queryPort: "3000"
+
+image:
+  commandRepo: rfashwal/go-task-user-command-service
+  queryRepo: rfashwal/go-task-user-query-service  
+  tag: latest
+  pullPolicy: Always
+
+environment:
+  USER_SERVICE_COMMAND_NAME: user-command-service
+  USER_SERVICE_COMMAND_PORT: "3001"
+  USER_SERVICE_QUERY_NAME: user-query-service
+  USER_SERVICE_QUERY_PORT: "3000"
+  USER_SERVICE_DB_HOST: mysql.default.svc.cluster.local
+  USER_SERVICE_DB_PORT: "3306"
+  USER_SERVICE_DB_NAME: user_tracker
+  USER_SERVICE_NATS_PORT: "4222" 
+  USER_SERVICE_NATS_SERVICE: nats.default.svc.cluster.local
+
+resources: {}

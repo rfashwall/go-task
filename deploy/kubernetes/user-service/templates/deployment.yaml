@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "user-service.fullname" . }}-command
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "user-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "user-service.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "user-service.name" . }}-command
+          image: "{{ .Values.image.commandRepo }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.commandPort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "user-service.fullname" . }}-command-config
+            - secretRef:
+                name: {{ include "user-service.fullname" . }}-secret
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "user-service.fullname" . }}-query
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "user-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "user-service.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "user-service.name" . }}-query
+          image: "{{ .Values.image.queryRepo }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.queryPort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "user-service.fullname" . }}-query-config
+            - secretRef:
+                name: {{ include "user-service.fullname" . }}-secret
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+

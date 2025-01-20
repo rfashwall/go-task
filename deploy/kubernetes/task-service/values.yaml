@@ -1,0 +1,23 @@
+service:
+  name: task-service 
+  commandPort: "3002"
+  queryPort: "3003"
+
+image:
+  commandRepo: rfashwal/go-task-task-command-service
+  queryRepo: rfashwal/go-task-task-query-service  
+  tag: latest
+  pullPolicy: Always
+
+environment:
+  TASK_SERVICE_COMMAND_NAME: task-command-service
+  TASK_SERVICE_COMMAND_PORT: "3002"
+  TASK_SERVICE_QUERY_NAME: task-query-service
+  TASK_SERVICE_QUERY_PORT: "3003"
+  TASK_SERVICE_DB_HOST: mysql.default.svc.cluster.local
+  TASK_SERVICE_DB_PORT: "3306"
+  TASK_SERVICE_DB_NAME: task_tracker
+  TASK_SERVICE_NATS_PORT: "4222" 
+  TASK_SERVICE_NATS_SERVICE: nats.default.svc.cluster.local
+
+resources: {}

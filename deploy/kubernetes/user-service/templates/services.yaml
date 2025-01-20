@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "user-service.fullname" . }}-command-service
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.service.commandPort }}
+      targetPort: {{ .Values.service.commandPort }}
+      protocol: TCP
+      name: http-command
+  selector:
+    {{- include "user-service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "user-service.fullname" . }}-query-service
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.service.queryPort }}
+      targetPort: {{ .Values.service.queryPort }}
+      protocol: TCP
+      name: http-query
+  selector:
+    {{- include "user-service.selectorLabels" . | nindent 4 }}

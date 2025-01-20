@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "task-service.fullname" . }}-command
+  labels:
+    {{- include "task-service.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "task-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "task-service.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "task-service.name" . }}-command
+          image: "{{ .Values.image.commandRepo }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.commandPort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "task-service.fullname" . }}-command-config
+            - secretRef:
+                name: {{ include "task-service.fullname" . }}-secret
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "task-service.fullname" . }}-query
+  labels:
+    {{- include "task-service.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "task-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "task-service.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "task-service.name" . }}-query
+          image: "{{ .Values.image.queryRepo }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.queryPort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "task-service.fullname" . }}-query-config
+            - secretRef:
+                name: {{ include "task-service.fullname" . }}-secret
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
