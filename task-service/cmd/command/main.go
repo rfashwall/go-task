@@ -14,6 +14,7 @@ import (
 	"github.com/rfashwall/go-task/pkg/utils"
 	"github.com/rfashwall/task-service/internal/handlers"
 	"github.com/rfashwall/task-service/internal/repository/command"
+	"github.com/rfashwall/task-service/internal/service"
 	internalstream "github.com/rfashwall/task-service/internal/streaming"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -30,6 +31,8 @@ func main() {
 
 	serviceName := viper.GetString("SERVICE_NAME")
 	servicePort := viper.GetString("SERVICE_PORT")
+	userSvcHost := viper.GetString("USER_SERVICE_HOST")
+	userSvcPort := viper.GetString("USER_SERVICE_PORT")
 
 	app := fiber.New()
 	app.Use(logger.New())
@@ -50,6 +53,8 @@ func main() {
 	// Initialize the repository
 	taskCommand := command.NewMySQLTaskCommand(conn)
 
+	userService := service.NewHTTPUserService(fmt.Sprintf("http://%s:%s", userSvcHost, userSvcPort))
+
 	natsService := viper.GetString("NATS_SERVICE")
 	natsPort := viper.GetString("NATS_PORT")
 	logger.Info("Connecting to NATS")
@@ -69,7 +74,7 @@ func main() {
 
 	// Initialize the handler
 	logger.Info("Initializing task command handler")
-	taskHandler := handlers.NewTaskCommandHandler(taskCommand, nc, logger)
+	taskHandler := handlers.NewTaskCommandHandler(taskCommand, nc, userService, logger)
 
 	// Set up routes
 	logger.Info("Setting up routes")

@@ -76,6 +76,8 @@
       - TASK_SERVICE_SERVICE_PORT=3002
       - TASK_SERVICE_NATS_PORT=4222
       - TASK_SERVICE_NATS_SERVICE=nats
+      - TASK_SERVICE_USER_SERVICE_HOST=user-query-service
+      - TASK_SERVICE_USER_SERVICE_PORT=3000
     depends_on:
       mysql-server:
         condition: service_healthy
