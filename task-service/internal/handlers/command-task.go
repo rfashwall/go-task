@@ -7,20 +7,23 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/rfashwall/task-service/internal/models"
 	"github.com/rfashwall/task-service/internal/repository/command"
+	"github.com/rfashwall/task-service/internal/service"
 	"go.uber.org/zap"
 )
 
 type TaskCommandHandler struct {
 	TaskCommand command.TaskCommand
-	logger      *zap.Logger
 	nc          *nats.Conn
+	userService service.UserService
+	logger      *zap.Logger
 }
 
-func NewTaskCommandHandler(taskCommand command.TaskCommand, nc *nats.Conn, logger *zap.Logger) *TaskCommandHandler {
+func NewTaskCommandHandler(taskCommand command.TaskCommand, nc *nats.Conn, userService service.UserService, logger *zap.Logger) *TaskCommandHandler {
 	return &TaskCommandHandler{
 		TaskCommand: taskCommand,
-		logger:      logger,
 		nc:          nc,
+		userService: userService,
+		logger:      logger,
 	}
 }
 
@@ -38,7 +41,16 @@ func (h *TaskCommandHandler) createTask(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("Invalid input")
 	}
 
-	err := h.TaskCommand.CreateTask(c.UserContext(), task)
+	user, err := h.userService.GetUserByID(c.UserContext(), task.UserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	if user == nil {
+		return c.Status(fiber.StatusBadRequest).SendString("Invalid user ID")
+	}
+
+	err = h.TaskCommand.CreateTask(c.UserContext(), task)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
