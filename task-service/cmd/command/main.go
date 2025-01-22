@@ -53,7 +53,7 @@ func main() {
 	// Initialize the repository
 	taskCommand := command.NewMySQLTaskCommand(conn)
 
-	userService := service.NewHTTPUserService(fmt.Sprintf("http://%s:%s", userSvcHost, userSvcPort))
+	userService := service.NewHTTPUserService(fmt.Sprintf("%s:%s", userSvcHost, userSvcPort))
 
 	natsService := viper.GetString("NATS_SERVICE")
 	natsPort := viper.GetString("NATS_PORT")

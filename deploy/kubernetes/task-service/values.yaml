@@ -19,5 +19,7 @@ environment:
   TASK_SERVICE_DB_NAME: task_tracker
   TASK_SERVICE_NATS_PORT: "4222" 
   TASK_SERVICE_NATS_SERVICE: nats.default.svc.cluster.local
+  TASK_SERVICE_USER_SERVICE_HOST: user-service-query-service.default.svc.cluster.local
+  TASK_SERVICE_USER_SERVICE_PORT: "3000"
 
 resources: {}

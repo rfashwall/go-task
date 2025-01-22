@@ -10,6 +10,8 @@ data:
   TASK_SERVICE_NATS_PORT: "{{ .Values.environment.TASK_SERVICE_NATS_PORT }}" 
   TASK_SERVICE_SERVICE_NAME: {{ .Values.environment.TASK_SERVICE_COMMAND_NAME }}
   TASK_SERVICE_SERVICE_PORT: "{{ .Values.environment.TASK_SERVICE_COMMAND_PORT }}"
+  TASK_SERVICE_USER_SERVICE_HOST: user-service-query-service.default.svc.cluster.local
+  TASK_SERVICE_USER_SERVICE_PORT: "3000"
 ---
 apiVersion: v1
 kind: ConfigMap
